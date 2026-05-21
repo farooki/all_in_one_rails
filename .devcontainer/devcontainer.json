@@ -16,7 +16,7 @@
     }
   },
 
-  "postCreateCommand": "bundle install && bin/rails db:prepare",
+  "postCreateCommand": "bundle install && npm install && bin/rails db:prepare",
 
   "remoteUser": "vscode",
 

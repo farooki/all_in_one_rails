@@ -14,6 +14,7 @@ A full-stack Ruby on Rails 8 application with PostgreSQL, Hotwire, and the Solid
 | ORM | Active Record | (bundled with Rails) |
 | Primary Keys | UUID (`pgcrypto`) | — |
 | Asset Pipeline | Propshaft | latest |
+| CSS | Tailwind CSS | 4.x |
 | JavaScript | Importmap + Stimulus | latest |
 | Realtime | Turbo (Hotwire) | latest |
 | WebSockets | Solid Cable | latest |
@@ -64,11 +65,11 @@ The project ships with a fully configured Dev Container that provides Ruby, Node
    bundle install && bin/rails db:prepare
    ```
 
-4. Start the server:
+4. Start the server with Tailwind's CSS watcher:
    ```bash
-   bin/rails server
+   bin/dev
    ```
-   The app will be available at [http://localhost:3000](http://localhost:3000).
+   The app will be available at [http://localhost:3000](http://localhost:3000). `bin/dev` runs both Rails and `tailwindcss:watch` via foreman.
 
 **What the Dev Container provides:**
 
@@ -116,9 +117,9 @@ The project ships with a fully configured Dev Container that provides Ruby, Node
    bin/rails db:prepare
    ```
 
-4. Start the server:
+4. Start the server with Tailwind's CSS watcher:
    ```bash
-   bin/rails server
+   bin/dev
    ```
 
 ---
