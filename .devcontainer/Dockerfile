@@ -2,23 +2,20 @@ FROM ruby:3.4.6-bookworm
 
 ARG NODE_MAJOR=20
 
-# Install system dependencies and Node.js
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y \
       build-essential \
       curl \
       git \
       gnupg2 \
-      libsqlite3-dev \
+      libpq-dev \
       libvips \
       libyaml-dev \
-      pkg-config \
-      sqlite3 && \
+      pkg-config && \
     curl -fsSL https://deb.nodesource.com/setup_${NODE_MAJOR}.x | bash - && \
     apt-get install --no-install-recommends -y nodejs && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
-# Create non-root user to match VS Code convention
 ARG USERNAME=vscode
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID

@@ -1,17 +1,18 @@
 {
   "name": "all_in_one_rails",
-  "build": {
-    "dockerfile": "Dockerfile",
-    "context": ".."
-  },
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
   "workspaceFolder": "/workspaces/all_in_one_rails",
-  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/all_in_one_rails,type=bind",
 
-  "forwardPorts": [3000],
+  "forwardPorts": [3000, 5432],
   "portsAttributes": {
     "3000": {
       "label": "Rails",
       "onAutoForward": "notify"
+    },
+    "5432": {
+      "label": "PostgreSQL",
+      "onAutoForward": "silent"
     }
   },
 
@@ -28,7 +29,8 @@
         "bung87.rails",
         "ms-vscode.vscode-json",
         "esbenp.prettier-vscode",
-        "eamodio.gitlens"
+        "eamodio.gitlens",
+        "ckolkman.vscode-postgres"
       ],
       "settings": {
         "editor.formatOnSave": true,
@@ -42,10 +44,5 @@
         "terminal.integrated.defaultProfile.linux": "bash"
       }
     }
-  },
-
-  "mounts": [
-    "source=all_in_one_rails-bundler-cache,target=/usr/local/bundle,type=volume",
-    "source=all_in_one_rails-node-modules,target=/workspaces/all_in_one_rails/node_modules,type=volume"
-  ]
+  }
 }
