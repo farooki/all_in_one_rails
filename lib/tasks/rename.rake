@@ -7,24 +7,31 @@ namespace :rename do
       bin/rails rename:project[new_name,force]    # skip confirmation
 
     The new_name must be in snake_case (e.g. my_cool_app).
+    The current project name is auto-detected from the Rails application module.
 
     What gets updated:
-      - Ruby module names  (AllInOneRails → NewName)
-      - Database names     (all_in_one_rails_development → ...)
-      - Vue mount id       (#all_in_one_rails → #new_name)
-      - Docker volumes / devcontainer name
-      - README, CLAUDE.md, package.json, deploy config
+      - Ruby module name in config/application.rb
+      - Database names in config/database.yml
+      - Vue mount id (#current_name → #new_name)
+      - Dev Container name and Docker volume names
+      - README.md, CLAUDE.md, package.json, deploy config
       - Dockerfile WORKDIR path
-      - Every config, view, JS, Vue, and ERB file in the project
+      - Every .rb, .erb, .vue, .js, .ts, .yml, .json, .md file in the project
+      - .git directory is removed so the new project starts with a clean history
   DESC
   task :project, [:new_name, :force] => :environment do |_t, args|
-    # ── Resolve old name variants ───────────────────────────────
-    old_snake  = "all_in_one_rails"
-    old_pascal = "AllInOneRails"
-    old_kebab  = "all-in-one-rails"
-    old_human  = "All In One Rails"
+    require "fileutils"
 
-    # ── Validate + normalise new name ──────────────────────────
+    # ── Auto-detect current name from the Rails application module ──
+    old_pascal = Rails.application.class.module_parent_name
+    old_snake  = old_pascal
+      .gsub(/([A-Z]+)([A-Z][a-z])/, '\1_\2')
+      .gsub(/([a-z\d])([A-Z])/, '\1_\2')
+      .downcase
+    old_kebab  = old_snake.tr("_", "-")
+    old_human  = old_snake.split("_").map(&:capitalize).join(" ")
+
+    # ── Validate + normalise new name ──────────────────────────────
     raw = args[:new_name].to_s.strip
     if raw.empty?
       abort <<~MSG
@@ -44,24 +51,28 @@ namespace :rename do
     end
 
     if new_snake == old_snake
-      abort "ERROR: New name is identical to the current name. Nothing to do."
+      abort "ERROR: New name is identical to the current name (#{old_snake}). Nothing to do."
     end
 
     new_pascal = new_snake.split("_").map(&:capitalize).join
     new_kebab  = new_snake.tr("_", "-")
     new_human  = new_snake.split("_").map(&:capitalize).join(" ")
 
-    # ── Print summary ───────────────────────────────────────────
+    # ── Print summary ───────────────────────────────────────────────
     puts ""
     puts "  Project rename"
-    puts "  " + "─" * 52
+    puts "  " + "─" * 54
+    puts "  Detected    :  #{old_human} (#{old_snake})"
+    puts "  " + "─" * 54
     puts "  snake_case  :  #{old_snake}  →  #{new_snake}"
     puts "  PascalCase  :  #{old_pascal}  →  #{new_pascal}"
     puts "  kebab-case  :  #{old_kebab}  →  #{new_kebab}"
     puts "  Human       :  #{old_human}  →  #{new_human}"
     puts ""
+    puts "  .git directory will be removed for a clean history."
+    puts ""
 
-    # ── Confirm unless forced ───────────────────────────────────
+    # ── Confirm unless forced ────────────────────────────────────────
     unless args[:force].to_s == "force"
       print "  Continue? [y/N]  "
       $stdout.flush
@@ -81,7 +92,7 @@ namespace :rename do
       [old_snake,  new_snake],
     ]
 
-    # ── Files to process ───────────────────────────────────────
+    # ── Files to process ────────────────────────────────────────────
     globs = %w[
       app/**/*.rb
       app/**/*.erb
@@ -135,12 +146,12 @@ namespace :rename do
       .flat_map { |g| Dir.glob(g, File::FNM_DOTMATCH) }
       .concat(explicit_files)
       .uniq
-      .select  { |f| File.file?(f) }
-      .reject  { |f| skip_files.any? { |s| File.basename(f) == s } }
-      .reject  { |f| skip_dirs.any?  { |d| f.start_with?("#{d}/") || f.start_with?(".#{d}/") } }
+      .select { |f| File.file?(f) }
+      .reject { |f| skip_files.any? { |s| File.basename(f) == s } }
+      .reject { |f| skip_dirs.any?  { |d| f.start_with?("#{d}/") || f.start_with?(".#{d}/") } }
       .sort
 
-    # ── Process each file ───────────────────────────────────────
+    # ── Process each file ────────────────────────────────────────────
     changed = []
     skipped = []
 
@@ -162,24 +173,34 @@ namespace :rename do
       puts "  ✓  #{file}"
     end
 
-    # ── Summary ─────────────────────────────────────────────────
+    # ── Remove .git for a clean history ─────────────────────────────
     puts ""
-    puts "  " + "─" * 52
+    if Dir.exist?(".git")
+      FileUtils.rm_rf(".git")
+      puts "  ✓  .git removed"
+    else
+      puts "  –  .git not found, skipping"
+    end
+
+    # ── Summary ──────────────────────────────────────────────────────
+    puts ""
+    puts "  " + "─" * 54
     puts "  #{changed.size} file(s) updated."
 
     if skipped.any?
       puts ""
       puts "  Skipped (could not read):"
-      skipped.each { |s| puts "    #{s}" }
+      skipped.each { |s| puts "    –  #{s}" }
     end
 
     puts ""
     puts "  Next steps:"
-    puts "    1.  bundle install"
-    puts "    2.  npm install"
-    puts "    3.  bin/rails db:drop db:create db:migrate"
-    puts "    4.  Rebuild the devcontainer  (Rebuild Container in VS Code)"
-    puts "    5.  bin/dev"
+    puts "    1.  git init && git add -A && git commit -m 'Initial commit: #{new_human}'"
+    puts "    2.  bundle install"
+    puts "    3.  npm install"
+    puts "    4.  bin/rails db:drop db:create db:migrate"
+    puts "    5.  Rebuild the Dev Container  (VS Code: Rebuild Container)"
+    puts "    6.  bin/dev"
     puts ""
   end
 end
