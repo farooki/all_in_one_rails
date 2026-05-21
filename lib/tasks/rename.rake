@@ -182,6 +182,25 @@ namespace :rename do
       puts "  –  .git not found, skipping"
     end
 
+    # ── Rename the project directory ─────────────────────────────────
+    current_dir      = Dir.pwd
+    parent_dir       = File.dirname(current_dir)
+    current_dir_name = File.basename(current_dir)
+    new_dir          = File.join(parent_dir, new_snake)
+
+    dir_renamed = false
+    if [ old_snake, old_kebab ].include?(current_dir_name)
+      if Dir.exist?(new_dir)
+        puts "  –  Directory rename skipped: '#{new_dir}' already exists"
+      else
+        FileUtils.mv(current_dir, new_dir)
+        puts "  ✓  Directory renamed: #{current_dir_name}  →  #{new_snake}"
+        dir_renamed = true
+      end
+    else
+      puts "  –  Directory name '#{current_dir_name}' doesn't match project name — skipping directory rename"
+    end
+
     # ── Summary ──────────────────────────────────────────────────────
     puts ""
     puts "  " + "─" * 54
@@ -193,8 +212,10 @@ namespace :rename do
       skipped.each { |s| puts "    –  #{s}" }
     end
 
+    project_path = dir_renamed ? new_dir : current_dir
     puts ""
     puts "  Next steps:"
+    puts "    0.  cd #{project_path}"
     puts "    1.  git init && git add -A && git commit -m 'Initial commit: #{new_human}'"
     puts "    2.  bundle install"
     puts "    3.  npm install"
