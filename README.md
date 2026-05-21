@@ -10,7 +10,7 @@ A full-stack Ruby on Rails 8 application with PostgreSQL, Hotwire, and the Solid
 |---|---|---|
 | Language | Ruby | 3.4.6 |
 | Framework | Ruby on Rails | 8.1.3 |
-| Database | PostgreSQL | 18 |
+| Database | PostgreSQL | 17.6 |
 | ORM | Active Record | (bundled with Rails) |
 | Primary Keys | UUID (`pgcrypto`) | — |
 | Asset Pipeline | Propshaft | latest |
