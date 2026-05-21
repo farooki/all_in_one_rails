@@ -1,0 +1,51 @@
+{
+  "name": "all_in_one_rails",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "workspaceFolder": "/workspaces/all_in_one_rails",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/all_in_one_rails,type=bind",
+
+  "forwardPorts": [3000],
+  "portsAttributes": {
+    "3000": {
+      "label": "Rails",
+      "onAutoForward": "notify"
+    }
+  },
+
+  "postCreateCommand": "bundle install && bin/rails db:prepare",
+
+  "remoteUser": "vscode",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "Shopify.ruby-lsp",
+        "rebornix.Ruby",
+        "castwide.solargraph",
+        "bung87.rails",
+        "ms-vscode.vscode-json",
+        "esbenp.prettier-vscode",
+        "eamodio.gitlens"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "[ruby]": {
+          "editor.defaultFormatter": "Shopify.ruby-lsp"
+        },
+        "rubyLsp.rubyVersionManager": {
+          "identifier": "none"
+        },
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  },
+
+  "mounts": [
+    "source=all_in_one_rails-bundler-cache,target=/usr/local/bundle,type=volume",
+    "source=all_in_one_rails-node-modules,target=/workspaces/all_in_one_rails/node_modules,type=volume"
+  ]
+}
