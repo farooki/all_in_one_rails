@@ -24,7 +24,9 @@ RUN groupadd --gid $USER_GID $USERNAME && \
 
 RUN mkdir -p /usr/local/bundle && chown -R $USERNAME:$USERNAME /usr/local/bundle
 
-ENV BUNDLE_PATH=/usr/local/bundle
+ENV BUNDLE_PATH=/usr/local/bundle \
+    GEM_PATH=/usr/local/bundle/ruby/3.4.0 \
+    PATH=/usr/local/bundle/ruby/3.4.0/bin:/usr/local/bundle/bin:$PATH
 
 WORKDIR /workspaces/all_in_one_rails
 
