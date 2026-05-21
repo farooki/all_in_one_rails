@@ -19,7 +19,7 @@ namespace :rename do
       - Every .rb, .erb, .vue, .js, .ts, .yml, .json, .md file in the project
       - .git directory is removed so the new project starts with a clean history
   DESC
-  task :project, [:new_name, :force] => :environment do |_t, args|
+  task :project, [ :new_name, :force ] => :environment do |_t, args|
     require "fileutils"
 
     # ── Auto-detect current name from the Rails application module ──
@@ -86,10 +86,10 @@ namespace :rename do
 
     # ── Ordered substitutions (PascalCase first to avoid partial hits) ──
     subs = [
-      [old_pascal, new_pascal],
-      [old_kebab,  new_kebab],
-      [old_human,  new_human],
-      [old_snake,  new_snake],
+      [ old_pascal, new_pascal ],
+      [ old_kebab,  new_kebab ],
+      [ old_human,  new_human ],
+      [ old_snake,  new_snake ]
     ]
 
     # ── Files to process ────────────────────────────────────────────
