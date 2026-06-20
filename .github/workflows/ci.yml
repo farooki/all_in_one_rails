@@ -20,10 +20,10 @@ jobs:
 
       - name: Scan for common Rails security vulnerabilities using static analysis
         run: bin/brakeman --no-pager
-      
+
       - name: Scan for known security vulnerabilities in gems used
         run: bin/bundler-audit
-      
+
   scan_js:
     runs-on: ubuntu-latest
 
@@ -31,16 +31,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          bundler-cache: true
-
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: lts/*
           cache: npm
+
+      - name: Install JS dependencies
+        run: npm ci
 
       - name: Scan for security vulnerabilities in JavaScript dependencies
         run: npm audit --audit-level=high
@@ -71,7 +69,7 @@ jobs:
       - name: Lint code for consistent style
         run: bin/rubocop -f github
 
-  test:
+  backend-tests:
     runs-on: ubuntu-latest
 
     services:
@@ -90,7 +88,7 @@ jobs:
           --health-retries 5
 
     steps:
-      - name: Install packages
+      - name: Install system packages
         run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libvips libpq-dev
 
       - name: Checkout code
@@ -101,10 +99,29 @@ jobs:
         with:
           bundler-cache: true
 
-      - name: Run tests
+      - name: Run backend tests
         env:
           RAILS_ENV: test
           DB_HOST: localhost
           DB_USERNAME: postgres
           DB_PASSWORD: postgres
         run: bin/rails db:test:prepare test
+
+  frontend-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - name: Install JS dependencies
+        run: npm ci
+
+      - name: Run frontend tests
+        run: npm test

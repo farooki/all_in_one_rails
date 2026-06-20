@@ -220,10 +220,24 @@ bin/rails vite:build
 
 ## Testing
 
+### Backend — Minitest + SimpleCov
+
 ```bash
-bin/rails test                              # all unit & integration tests
-bin/rails test:db                          # reset DB then test
+bin/rails test                    # run all backend tests
+bin/rails test test/models/       # run a specific directory
+bin/rails test:db                 # reset DB then test
 ```
+
+Coverage is tracked by **SimpleCov** (`simplecov` gem). After every run a report is generated to `coverage/index.html` — open it in a browser to see file-by-file line coverage. The `coverage/` directory is gitignored.
+
+### Frontend — Vitest + Vue Test Utils
+
+```bash
+npm test                          # single run (CI mode)
+npm run test:watch                # watch mode — reruns on file change
+```
+
+Test files live in `test/javascript/` following the pattern `**/*.test.{js,ts}`. Config is in `vitest.config.ts` (kept separate from `vite.config.ts` so vite-plugin-ruby doesn't interfere with test resolution).
 
 **Security:**
 ```bash
@@ -285,14 +299,15 @@ bin/dev
 
 ## CI/CD
 
-GitHub Actions runs four jobs on every pull request and push to `main`:
+GitHub Actions runs five parallel jobs on every pull request and push to `main`:
 
 | Job | What it does |
 |---|---|
 | `scan_ruby` | Brakeman static analysis + bundler-audit gem CVE check |
-| `scan_js` | importmap audit |
+| `scan_js` | `npm audit --audit-level=high` |
 | `lint` | RuboCop with result caching |
-| `test` | Spins up `postgres:17.6`, runs `bin/rails db:test:prepare test` |
+| `backend-tests` | Spins up `postgres:17.6`, runs `bin/rails db:test:prepare test` with SimpleCov |
+| `frontend-tests` | Installs Node deps, runs `npm test` (Vitest + Vue Test Utils) |
 
 ---
 
