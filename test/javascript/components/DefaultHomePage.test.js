@@ -26,7 +26,7 @@ describe('DefaultHomePage', () => {
 
   it('renders all category names', () => {
     const labels = wrapper.findAll('.card-label').map(el => el.text())
-    expect(labels).toEqual(['Backend', 'Frontend', 'Hotwire', 'Solid Stack', 'Infrastructure', 'Dev Tools'])
+    expect(labels).toEqual(['Backend', 'Frontend', 'Hotwire', 'Background & Queue', 'Infrastructure', 'Dev Tools'])
   })
 
   // ── Badges ──────────────────────────────────────────────────
