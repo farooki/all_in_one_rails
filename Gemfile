@@ -23,6 +23,7 @@ gem "thruster", require: false
 
 gem "image_processing", "~> 2.0"
 gem "mini_magick"
+gem "clickhouse-activerecord"
 
 group :development, :test do
   gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
