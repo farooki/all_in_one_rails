@@ -23,10 +23,6 @@ production:
     <<: *default
     database: all_in_one_rails_cache
     migrations_paths: db/cache_migrate
-  queue:
-    <<: *default
-    database: all_in_one_rails_queue
-    migrations_paths: db/queue_migrate
   cable:
     <<: *default
     database: all_in_one_rails_cable

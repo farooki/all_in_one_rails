@@ -1,6 +1,6 @@
 # All In One Rails
 
-A full-stack Ruby on Rails 8 application with Vue 3, PostgreSQL, Tailwind CSS 4, Hotwire, and the Solid Stack — batteries included, production-ready from day one.
+A full-stack Ruby on Rails 8 application with Vue 3, PostgreSQL, Tailwind CSS 4, Hotwire, Sidekiq, and Redis — batteries included, production-ready from day one.
 
 ---
 
@@ -15,21 +15,22 @@ A full-stack Ruby on Rails 8 application with Vue 3, PostgreSQL, Tailwind CSS 4,
 | Database | PostgreSQL | 17.6 |
 | DB Adapter | pg | 1.6.3 |
 | Primary Keys | UUID via `pgcrypto` | — |
-| Web Server | Puma | 8.0.1 |
+| Web Server | Puma | 8.0.2 |
 | HTTP Accelerator | Thruster | 0.1.21 |
 | Asset Pipeline | Propshaft | 1.3.2 |
-| Image Processing | image_processing | 1.14.0 |
-| Deployment | Kamal | 2.11.0 |
+| Image Processing | image_processing | 2.0.2 |
+| Image Backend | mini_magick | 5.3.1 |
+| Deployment | Kamal | 2.12.0 |
 
 ### Frontend
 
 | Layer | Technology | Version |
 |---|---|---|
-| UI Framework | Vue.js | 3.5.34 |
-| Client Routing | Vue Router | 4.6.4 |
-| State Management | Pinia | 2.3.1 |
-| CSS | Tailwind CSS | 4.3.0 |
-| JS Bundler | Vite | 8.0.14 |
+| UI Framework | Vue.js | 3.5.38 |
+| Client Routing | Vue Router | 5.1.0 |
+| State Management | Pinia | 3.0.4 |
+| CSS | Tailwind CSS | 4.3.1 |
+| JS Bundler | Vite | 8.0.16 |
 | Vite Rails Bridge | vite_rails | 3.11.0 |
 
 ### Hotwire & Realtime
@@ -40,24 +41,60 @@ A full-stack Ruby on Rails 8 application with Vue 3, PostgreSQL, Tailwind CSS 4,
 | turbo-rails | 2.0.23 |
 | @hotwired/stimulus | 3.2.2 |
 | stimulus-rails | 1.3.4 |
-| Solid Cable (WebSockets) | 3.0.12 |
+| Solid Cable (WebSockets) | 4.0.0 |
 
-### Background & Caching
+### Background Jobs
 
 | Technology | Version |
 |---|---|
-| Solid Queue | 1.4.0 |
+| Sidekiq | 8.1.6 |
+| sidekiq-failures | 1.1.0 |
+| Redis (valkey/valkey) | 8 |
+| redis gem | 5.4.1 |
+
+Sidekiq Web UI is mounted at `/sidekiq` — dashboard, queues, retries, dead jobs, and a **Failures** tab.
+
+### Caching
+
+| Technology | Version |
+|---|---|
 | Solid Cache | 1.0.10 |
+
+### Optional: ClickHouse
+
+ClickHouse support is built in and controlled by a feature flag in `config/initializers/features.rb`:
+
+```ruby
+ENABLE_CLICKHOUSE = false   # set to true to activate
+```
+
+When enabled, the app registers a ClickHouse connection at boot and exposes `ApplicationClickhouseRecord` as the abstract base class for ClickHouse models.
+
+| Component | Version |
+|---|---|
+| clickhouse-activerecord | 1.6.7 |
+
+**Environment variables (when enabled):**
+
+| Variable | Default |
+|---|---|
+| `CLICKHOUSE_HOST` | `localhost` |
+| `CLICKHOUSE_PORT` | `8123` |
+| `CLICKHOUSE_DATABASE` | `all_in_one_rails` |
+| `CLICKHOUSE_USERNAME` | `default` |
+| `CLICKHOUSE_PASSWORD` | _(empty)_ |
 
 ### Development Tooling
 
-| Tool | Purpose |
-|---|---|
-| `debug` | Ruby debugger |
-| `bundler-audit` | Gem CVE scanning |
-| `brakeman` | Static security analysis |
-| `rubocop-rails-omakase` | Opinionated Ruby linting |
-| `web-console` | In-browser Rails console on error pages |
+| Tool | Version | Purpose |
+|---|---|---|
+| `debug` | — | Ruby debugger |
+| `bundler-audit` | — | Gem CVE scanning |
+| `brakeman` | 8.0.5 | Static security analysis |
+| `rubocop-rails-omakase` | — | Opinionated Ruby linting |
+| `web-console` | — | In-browser Rails console on error pages |
+| `foreman` | 0.90.0 | Process manager for `bin/dev` |
+| Bundler | 4.0.14 | Gem dependency manager |
 
 ---
 
@@ -95,15 +132,16 @@ The project ships with a fully configured Dev Container that provides Ruby, Node
    ```
    The app will be available at [http://localhost:3000](http://localhost:3000).
 
-   `bin/dev` uses foreman to run Rails and the Vite dev server concurrently — CSS and JS hot-reload automatically.
+   `bin/dev` uses foreman to run Rails, Vite dev server, and Sidekiq worker concurrently — CSS and JS hot-reload automatically.
 
 **What the Dev Container provides:**
 
 - Ruby 3.4.6 (via `ruby:3.4.6-bookworm`)
 - Node.js 20 LTS
-- PostgreSQL 17.6 sidecar service (hostname `db`, user/password `postgres`)
+- PostgreSQL 17.6 sidecar (hostname `db`, user/password `postgres`)
+- Redis sidecar via `valkey/valkey:8` (hostname `redis`, port `6379`)
 - Bundler gem cache persisted across rebuilds (named Docker volume)
-- VS Code extensions: Ruby LSP, Solargraph, Rails, Prettier, GitLens, PostgreSQL explorer
+- VS Code extensions: Ruby LSP, Solargraph, Rails, Prettier, GitLens, PostgreSQL explorer, Vue Volar, Tailwind CSS IntelliSense
 
 **Container environment variables** (set automatically):
 
@@ -112,6 +150,7 @@ The project ships with a fully configured Dev Container that provides Ruby, Node
 | `DB_HOST` | `db` |
 | `DB_USERNAME` | `postgres` |
 | `DB_PASSWORD` | `postgres` |
+| `REDIS_URL` | `redis://redis:6379/0` |
 
 ---
 
@@ -132,11 +171,12 @@ The project ships with a fully configured Dev Container that provides Ruby, Node
    npm install
    ```
 
-2. Configure the database connection (or use the defaults — see `config/database.yml`):
+2. Configure the database and Redis connection:
    ```bash
    export DB_HOST=localhost
    export DB_USERNAME=postgres
    export DB_PASSWORD=postgres
+   export REDIS_URL=redis://localhost:6379/0
    ```
 
 3. Create and migrate the database:
@@ -193,10 +233,24 @@ bin/rails vite:build
 
 ## Testing
 
+### Backend — Minitest + SimpleCov
+
 ```bash
-bin/rails test                              # all unit & integration tests
-bin/rails test:db                          # reset DB then test
+bin/rails test                    # run all backend tests
+bin/rails test test/models/       # run a specific directory
+bin/rails test:db                 # reset DB then test
 ```
+
+Coverage is tracked by **SimpleCov** (`simplecov` gem). After every run a report is generated to `coverage/index.html` — open it in a browser to see file-by-file line coverage. The `coverage/` directory is gitignored.
+
+### Frontend — Vitest + Vue Test Utils
+
+```bash
+npm test                          # single run (CI mode)
+npm run test:watch                # watch mode — reruns on file change
+```
+
+Test files live in `test/javascript/` following the pattern `**/*.test.{js,ts}`. Config is in `vitest.config.ts` (kept separate from `vite.config.ts` so vite-plugin-ruby doesn't interfere with test resolution).
 
 **Security:**
 ```bash
@@ -258,14 +312,15 @@ bin/dev
 
 ## CI/CD
 
-GitHub Actions runs four jobs on every pull request and push to `main`:
+GitHub Actions runs five parallel jobs on every pull request and push to `main`:
 
 | Job | What it does |
 |---|---|
 | `scan_ruby` | Brakeman static analysis + bundler-audit gem CVE check |
-| `scan_js` | importmap audit |
+| `scan_js` | `npm audit --audit-level=high` |
 | `lint` | RuboCop with result caching |
-| `test` | Spins up `postgres:17.6`, runs `bin/rails db:test:prepare test` |
+| `backend-tests` | Spins up `postgres:17.6` + `valkey:8`, runs `bin/rails db:test:prepare test` with SimpleCov |
+| `frontend-tests` | Installs Node deps, runs `npm test` (Vitest + Vue Test Utils) |
 
 ---
 
