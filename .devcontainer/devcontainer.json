@@ -16,7 +16,7 @@
     }
   },
 
-  "postCreateCommand": "bundle install && npm install && bin/rails db:prepare",
+  "postCreateCommand": "bundle config set default_cli_command install --global && bundle install && npm install && bin/rails db:prepare",
 
   "remoteUser": "vscode",
 
