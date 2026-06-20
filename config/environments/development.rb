@@ -35,6 +35,7 @@ Rails.application.configure do
 
   config.active_record.query_log_tags_enabled = true
 
+  config.active_job.queue_adapter = :sidekiq
   config.active_job.verbose_enqueue_logs = true
 
   config.action_dispatch.verbose_redirect_logs = true

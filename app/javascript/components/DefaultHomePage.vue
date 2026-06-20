@@ -39,6 +39,7 @@
         <span class="badge badge-red">Rails 8.1.3</span>
         <span class="badge badge-green">Vue 3.5.38</span>
         <span class="badge badge-blue">PostgreSQL 17.6</span>
+        <span class="badge badge-purple">Sidekiq 8.1.6</span>
         <span class="badge badge-amber">
           <span class="badge-dot"></span>
           ClickHouse · Disabled
@@ -152,10 +153,12 @@ const techStack = [
     ],
   },
   {
-    name: 'Solid Stack',
+    name: 'Background & Queue',
     color: '#60a5fa',
     items: [
-      { name: 'Solid Queue',        version: '1.4.0'  },
+      { name: 'Sidekiq',            version: '8.1.6'  },
+      { name: 'sidekiq-failures',   version: '1.1.0'  },
+      { name: 'Redis · valkey',     version: '8'      },
       { name: 'Solid Cache',        version: '1.0.10' },
       { name: 'Solid Cable',        version: '4.0.0'  },
     ],
@@ -177,7 +180,7 @@ const techStack = [
     name: 'Dev Tools',
     color: '#22d3ee',
     items: [
-      { name: 'Dev Container · PG 17.6',  version: null     },
+      { name: 'Dev Container · PG + Redis', version: null    },
       { name: 'Vite Ruby',                version: '3.11.0' },
       { name: 'Foreman',                  version: '0.90.0' },
       { name: 'GitHub Actions',           version: null     },
@@ -371,6 +374,7 @@ const footerStats = [
 .badge-green  { background: rgba(52,211,153,0.1);  border: 1px solid rgba(52,211,153,0.25);  color: #34d399; }
 .badge-red    { background: rgba(248,113,113,0.1);  border: 1px solid rgba(248,113,113,0.25); color: #f87171; }
 .badge-blue   { background: rgba(96,165,250,0.1);  border: 1px solid rgba(96,165,250,0.25);  color: #60a5fa; }
+.badge-purple { background: rgba(192,132,252,0.1); border: 1px solid rgba(192,132,252,0.25); color: #c084fc; }
 .badge-amber  { background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.2);   color: rgba(251,191,36,0.7); }
 
 .badge-dot {

@@ -11,8 +11,10 @@ services:
       DB_HOST: db
       DB_USERNAME: postgres
       DB_PASSWORD: postgres
+      REDIS_URL: redis://redis:6379/0
     depends_on:
       - db
+      - redis
 
   db:
     image: postgres:17.6
@@ -30,6 +32,18 @@ services:
       retries: 10
       start_period: 30s
 
+  redis:
+    image: valkey/valkey:8
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
 volumes:
   postgres-data:
+  redis-data:
   all_in_one_rails-bundler-cache:

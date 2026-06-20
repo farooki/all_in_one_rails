@@ -4,14 +4,22 @@
   "service": "app",
   "workspaceFolder": "/workspaces/all_in_one_rails",
 
-  "forwardPorts": [3000, 5432],
+  "forwardPorts": [3000, 3036, 5432, 6379],
   "portsAttributes": {
     "3000": {
       "label": "Rails",
       "onAutoForward": "notify"
     },
+    "3036": {
+      "label": "Vite",
+      "onAutoForward": "silent"
+    },
     "5432": {
       "label": "PostgreSQL",
+      "onAutoForward": "silent"
+    },
+    "6379": {
+      "label": "Redis",
       "onAutoForward": "silent"
     }
   },
@@ -30,7 +38,9 @@
         "ms-vscode.vscode-json",
         "esbenp.prettier-vscode",
         "eamodio.gitlens",
-        "ckolkman.vscode-postgres"
+        "ckolkman.vscode-postgres",
+        "Vue.volar",
+        "bradlc.vscode-tailwindcss"
       ],
       "settings": {
         "editor.formatOnSave": true,

@@ -1,6 +1,6 @@
 # All In One Rails
 
-A full-stack Ruby on Rails 8 application with Vue 3, PostgreSQL, Tailwind CSS 4, Hotwire, and the Solid Stack — batteries included, production-ready from day one.
+A full-stack Ruby on Rails 8 application with Vue 3, PostgreSQL, Tailwind CSS 4, Hotwire, Sidekiq, and Redis — batteries included, production-ready from day one.
 
 ---
 
@@ -43,11 +43,21 @@ A full-stack Ruby on Rails 8 application with Vue 3, PostgreSQL, Tailwind CSS 4,
 | stimulus-rails | 1.3.4 |
 | Solid Cable (WebSockets) | 4.0.0 |
 
-### Background & Caching
+### Background Jobs
 
 | Technology | Version |
 |---|---|
-| Solid Queue | 1.4.0 |
+| Sidekiq | 8.1.6 |
+| sidekiq-failures | 1.1.0 |
+| Redis (valkey/valkey) | 8 |
+| redis gem | 5.4.1 |
+
+Sidekiq Web UI is mounted at `/sidekiq` — dashboard, queues, retries, dead jobs, and a **Failures** tab.
+
+### Caching
+
+| Technology | Version |
+|---|---|
 | Solid Cache | 1.0.10 |
 
 ### Optional: ClickHouse
@@ -122,15 +132,16 @@ The project ships with a fully configured Dev Container that provides Ruby, Node
    ```
    The app will be available at [http://localhost:3000](http://localhost:3000).
 
-   `bin/dev` uses foreman to run Rails and the Vite dev server concurrently — CSS and JS hot-reload automatically.
+   `bin/dev` uses foreman to run Rails, Vite dev server, and Sidekiq worker concurrently — CSS and JS hot-reload automatically.
 
 **What the Dev Container provides:**
 
 - Ruby 3.4.6 (via `ruby:3.4.6-bookworm`)
 - Node.js 20 LTS
-- PostgreSQL 17.6 sidecar service (hostname `db`, user/password `postgres`)
+- PostgreSQL 17.6 sidecar (hostname `db`, user/password `postgres`)
+- Redis sidecar via `valkey/valkey:8` (hostname `redis`, port `6379`)
 - Bundler gem cache persisted across rebuilds (named Docker volume)
-- VS Code extensions: Ruby LSP, Solargraph, Rails, Prettier, GitLens, PostgreSQL explorer
+- VS Code extensions: Ruby LSP, Solargraph, Rails, Prettier, GitLens, PostgreSQL explorer, Vue Volar, Tailwind CSS IntelliSense
 
 **Container environment variables** (set automatically):
 
@@ -139,6 +150,7 @@ The project ships with a fully configured Dev Container that provides Ruby, Node
 | `DB_HOST` | `db` |
 | `DB_USERNAME` | `postgres` |
 | `DB_PASSWORD` | `postgres` |
+| `REDIS_URL` | `redis://redis:6379/0` |
 
 ---
 
@@ -159,11 +171,12 @@ The project ships with a fully configured Dev Container that provides Ruby, Node
    npm install
    ```
 
-2. Configure the database connection (or use the defaults — see `config/database.yml`):
+2. Configure the database and Redis connection:
    ```bash
    export DB_HOST=localhost
    export DB_USERNAME=postgres
    export DB_PASSWORD=postgres
+   export REDIS_URL=redis://localhost:6379/0
    ```
 
 3. Create and migrate the database:
@@ -306,7 +319,7 @@ GitHub Actions runs five parallel jobs on every pull request and push to `main`:
 | `scan_ruby` | Brakeman static analysis + bundler-audit gem CVE check |
 | `scan_js` | `npm audit --audit-level=high` |
 | `lint` | RuboCop with result caching |
-| `backend-tests` | Spins up `postgres:17.6`, runs `bin/rails db:test:prepare test` with SimpleCov |
+| `backend-tests` | Spins up `postgres:17.6` + `valkey:8`, runs `bin/rails db:test:prepare test` with SimpleCov |
 | `frontend-tests` | Installs Node deps, runs `npm test` (Vitest + Vue Test Utils) |
 
 ---

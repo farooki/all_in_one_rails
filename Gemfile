@@ -12,8 +12,10 @@ gem "jbuilder"
 gem "tzinfo-data", platforms: %i[ windows jruby ]
 
 gem "solid_cache"
-gem "solid_queue"
 gem "solid_cable"
+gem "sidekiq"
+gem "sidekiq-failures"
+gem "redis"
 
 gem "bootsnap", require: false
 

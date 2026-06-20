@@ -18,7 +18,9 @@ This file gives Claude Code the context it needs to work effectively in this rep
 | Client routing | Vue Router | 5.1.0 |
 | Realtime / SPA | Turbo (Hotwire) | 2.0.23 |
 | WebSockets | Solid Cable | 4.0.0 |
-| Background jobs | Solid Queue | 1.4.0 |
+| Background jobs | Sidekiq | 8.1.6 |
+| Job failure tracking | sidekiq-failures | 1.1.0 |
+| Job queue store | Redis (valkey/valkey:8) | 5.4.1 (gem) |
 | Caching | Solid Cache | 1.0.10 |
 | Web server | Puma | 8.0.2 |
 | HTTP accelerator | Thruster | 0.1.21 |
@@ -36,7 +38,9 @@ This file gives Claude Code the context it needs to work effectively in this rep
 - `db/migrate/20260521000001_enable_uuids.rb` — enables `pgcrypto`; all tables use UUID primary keys
 - `vite.config.ts` — Vite build config (Ruby plugin, Vue, Tailwind)
 - `vitest.config.ts` — Vitest config for frontend tests (separate from vite.config.ts)
-- `Procfile.dev` — runs Rails + Vite dev server via foreman (`bin/dev`)
+- `Procfile.dev` — runs Rails + Vite dev server + Sidekiq worker via foreman (`bin/dev`)
+- `config/initializers/sidekiq.rb` — Sidekiq Redis connection config
+- `config/sidekiq.yml` — concurrency and queue definitions
 - `.devcontainer/` — Dev Container config (docker-compose, Dockerfile, devcontainer.json)
 - `.github/workflows/ci.yml` — CI pipeline (scan_ruby, scan_js, lint, backend-tests, frontend-tests)
 - `test/` — Minitest backend tests
@@ -49,7 +53,8 @@ The project ships with a Dev Container. Open it in VS Code with **Reopen in Cont
 ### What it provides
 
 - Ruby 3.4.6, Node.js 20, bundler
-- PostgreSQL 17.6 as a sidecar service (hostname `db`, user/password `postgres`)
+- PostgreSQL 17.6 sidecar (hostname `db`, user/password `postgres`)
+- Redis sidecar via `valkey/valkey:8` (hostname `redis`, port `6379`)
 - Persistent bundler gem cache (named Docker volume)
 
 ### Environment variables set automatically
@@ -59,6 +64,7 @@ The project ships with a Dev Container. Open it in VS Code with **Reopen in Cont
 | `DB_HOST` | `db` |
 | `DB_USERNAME` | `postgres` |
 | `DB_PASSWORD` | `postgres` |
+| `REDIS_URL` | `redis://redis:6379/0` |
 
 ### postCreateCommand
 
@@ -73,7 +79,7 @@ bundle config set default_cli_command install --global && bundle install && npm 
 bin/dev
 ```
 
-This uses foreman to run both `bin/rails server` and the Vite dev server concurrently. CSS and JS hot-reload automatically.
+This uses foreman to run `bin/rails server`, the Vite dev server, and a Sidekiq worker concurrently. CSS and JS hot-reload automatically.
 
 ## Debugging with Claude Code inside the Dev Container
 
@@ -116,6 +122,12 @@ rails console
 
 # Check database connectivity
 rails db:migrate:status
+
+# Sidekiq Web UI (browser)
+# http://localhost:3000/sidekiq
+
+# Inspect Sidekiq queue status from console
+Sidekiq::Queue.all.map { |q| [q.name, q.size] }
 
 # Run security scans
 bin/brakeman --no-pager
@@ -205,5 +217,5 @@ GitHub Actions runs five parallel jobs on every PR and push to `main`:
 | `scan_ruby` | Brakeman static analysis + bundler-audit gem CVE check |
 | `scan_js` | `npm audit --audit-level=high` |
 | `lint` | RuboCop with result caching |
-| `backend-tests` | Spins up `postgres:17.6`, runs `bin/rails db:test:prepare test` |
+| `backend-tests` | Spins up `postgres:17.6` + `valkey:8`, runs `bin/rails db:test:prepare test` |
 | `frontend-tests` | Installs Node deps, runs `npm test` (Vitest) |
